@@ -1682,13 +1682,6 @@ json_compatibility_result is_object_required_superset(
     auto older_req = get_array_or_empty(older, "required");
     auto newer_req = get_array_or_empty(newer, "required");
     auto older_props = get_object_or_empty(older, "properties");
-    auto newer_props = get_object_or_empty(newer, "properties");
-
-    // TODO O(n^2) lookup that can be a set_intersection.
-    auto older_req_in_both_properties
-      = older_req | std::views::filter([&](const json::Value& o) {
-            return newer_props.HasMember(o) && older_props.HasMember(o);
-        });
 
     // for each element:
     // in older.required? | in newer.required? | result
@@ -1696,10 +1689,17 @@ json_compatibility_result is_object_required_superset(
     //       yes          |         no         |  if it has "default" in older
     //       no           |        yes         |  yes
     std::ranges::for_each(
-      older_req_in_both_properties, [&](const json::Value& o) {
+      older_req, [&](const json::Value& o) {
+          
+          // Safely check if the property has a default value fallback
+          bool has_default = older_props.HasMember(o) && 
+                             older_props.FindMember(o)->value.HasMember("default");
+
+          // If the reader requires it, but the writer doesn't guarantee it, 
+          // and there is no default fallback, it is a breaking change.
           if (
             std::ranges::find(newer_req, o) == newer_req.End()
-            && !older_props.FindMember(o)->value.HasMember("default")) {
+            && !has_default) {
               res.emplace<json_incompatibility>(
                 p / "required" / as_string_view(o),
                 json_incompatibility_type::required_attribute_added);
