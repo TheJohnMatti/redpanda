@@ -1689,13 +1689,9 @@ json_compatibility_result is_object_required_superset(
     //       yes          |         no         |  if it has "default" in older
     //       no           |        yes         |  yes
     std::ranges::for_each(older_req, [&](const json::Value& o) {
-        // safely check if the property has a default value fallback
         bool has_default = older_props.HasMember(o)
                            && older_props.FindMember(o)->value.HasMember(
                              "default");
-
-        // if the reader requires it, but the writer doesn't guarantee it,
-        // and there is no default fallback, it is a breaking change.
         if (
           std::ranges::find(newer_req, o) == newer_req.End() && !has_default) {
             res.emplace<json_incompatibility>(
