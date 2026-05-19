@@ -2298,6 +2298,7 @@ const absl::flat_hash_set<incompatibility> forward_expected{
   // for this schema update.
   // {"#/properties/cccc",
   //  incompat_t::required_property_added_to_unopen_content_model},
+  {"#/required/cccc", incompat_t::required_attribute_added},
   {"#/dependencies/a", incompat_t::dependency_array_extended},
   {"#/dependencies/d", incompat_t::dependency_array_added},
   {"#/dependencies/b", incompat_t::type_narrowed},
